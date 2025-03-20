@@ -1,2 +1,4 @@
-/Test_Environment/
+/src/Test_Environment/
 /__pycache__/
+/build/
+/dist/

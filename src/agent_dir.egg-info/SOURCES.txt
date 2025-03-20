@@ -1,0 +1,7 @@
+README.md
+setup.py
+src/agent_dir.egg-info/PKG-INFO
+src/agent_dir.egg-info/SOURCES.txt
+src/agent_dir.egg-info/dependency_links.txt
+src/agent_dir.egg-info/requires.txt
+src/agent_dir.egg-info/top_level.txt

@@ -27,11 +27,11 @@ cd AgentDir
 
 2. Install required dependencies:
 ```bash
-pip install dspy-ai google-generativeai
+pip install -r ./requirements.txt
 ```
 
 3. Set up your Google API key:
-   - Get an API key from [Google AI Studio](https://makersuite.google.com/)
+   - Get an API key from [Google AI Studio](https://aistudio.google.com/apikey)
    - Add it to the configuration in main.py or set as environment variable
 
 ## Usage
