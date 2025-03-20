@@ -11,7 +11,7 @@ from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
 from kivy.utils import get_color_from_hex
 
-llm = dspy.LM("gemini/gemini-2.0-flash",api_key=os.environ.get("GEMINI_API_KEY"))
+llm = dspy.LM("gemini/gemini-2.0-flash",api_key=os.getenv("GEMINI_API_KEY"))
 dspy.configure(lm=llm)
 
 class AgentDIR(dspy.Signature):
