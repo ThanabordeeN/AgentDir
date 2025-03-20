@@ -9,6 +9,8 @@ AgentDir is an AI-powered file and directory management system built using the D
 - **Directory Navigation**: List directory contents with detailed information
 - **Reactive Agent Design**: Uses DSPy's ReAct framework for reasoning and action execution
 
+![alt text](images/image.png)
+
 ## Prerequisites
 
 - Python 3.8+
