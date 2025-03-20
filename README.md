@@ -21,7 +21,7 @@ AgentDir is an AI-powered file and directory management system built using the D
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/AgentDir.git
+git clone https://github.com/ThanabordeeN/AgentDir.git
 cd AgentDir
 ```
 
