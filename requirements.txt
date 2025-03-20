@@ -1,2 +1,2 @@
 dspy
-kivy
+kivy[base]

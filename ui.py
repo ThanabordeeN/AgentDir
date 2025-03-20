@@ -1,4 +1,6 @@
 import os
+import tkinter as tk
+from tkinter import filedialog
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -10,7 +12,6 @@ from kivy.utils import get_color_from_hex
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 
-# UI Components
 class DirectorySelector(BoxLayout):
     """Component for directory selection"""
     def __init__(self, accent_color, on_select_callback, **kwargs):
@@ -18,6 +19,9 @@ class DirectorySelector(BoxLayout):
         self.accent_color = accent_color
         self.on_select_callback = on_select_callback
         self._build_layout()
+        # Create hidden tkinter root window for dialogs
+        self.root = tk.Tk()
+        self.root.withdraw()
         
     def _build_layout(self):
         # Directory input
@@ -38,32 +42,15 @@ class DirectorySelector(BoxLayout):
         self.add_widget(browse_button)
     
     def show_directory_dialog(self, instance):
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        self.file_chooser = FileChooserListView(path=os.getcwd())
-        
-        select_button = Button(
-            text='Select',
-            size_hint=(1, None),
-            height=50,
-            background_color=self.accent_color
-        )
-        select_button.bind(on_press=self.select_directory)
-        
-        content.add_widget(self.file_chooser)
-        content.add_widget(select_button)
-        
-        self.popup = Popup(title='Select Directory', content=content, size_hint=(0.9, 0.9))
-        self.popup.open()
+        # Use native Windows directory dialog
+        selected_dir = filedialog.askdirectory(initialdir=os.getcwd())
+        if selected_dir:  # Check if user selected a directory or canceled
+            self.dir_display.text = selected_dir
+            if self.on_select_callback:
+                self.on_select_callback(selected_dir)
     
-    def select_directory(self, instance):
-        self.dir_display.text = self.file_chooser.path
-        self.popup.dismiss()
-        if self.on_select_callback:
-            self.on_select_callback(self.dir_display.text)
-        
     def get_selected_path(self):
         return self.dir_display.text
-
 class TaskInput(TextInput):
     """Component for task input"""
     def __init__(self, default_task="", **kwargs):
