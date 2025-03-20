@@ -1,9 +1,8 @@
 import os
 import dspy
-
 def setup_llm():
     """Set up and configure the language model."""
-    llm = dspy.LM("gemini/gemini-2.0-flash", api_key=os.getenv("GEMINI_API_KEY"))
+    llm = dspy.LM(model="gemini/gemini-2.0-flash", api_key=os.getenv("GEMINI_API_KEY"))
     dspy.configure(lm=llm)
     return llm
 

@@ -8,13 +8,15 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.core.window import Window
 from kivy.utils import get_color_from_hex
 from kivy.uix.popup import Popup
+from kivy.uix.scrollview import ScrollView
 
 # UI Components
 class DirectorySelector(BoxLayout):
     """Component for directory selection"""
-    def __init__(self, accent_color, **kwargs):
+    def __init__(self, accent_color, on_select_callback, **kwargs):
         super().__init__(orientation='horizontal', size_hint=(1, None), height=50, **kwargs)
         self.accent_color = accent_color
+        self.on_select_callback = on_select_callback
         self._build_layout()
         
     def _build_layout(self):
@@ -56,13 +58,15 @@ class DirectorySelector(BoxLayout):
     def select_directory(self, instance):
         self.dir_display.text = self.file_chooser.path
         self.popup.dismiss()
+        if self.on_select_callback:
+            self.on_select_callback(self.dir_display.text)
         
     def get_selected_path(self):
         return self.dir_display.text
 
 class TaskInput(TextInput):
     """Component for task input"""
-    def __init__(self, **kwargs):
+    def __init__(self, default_task="", **kwargs):
         super().__init__(
             hint_text='Enter task description...',
             multiline=False,
@@ -71,33 +75,25 @@ class TaskInput(TextInput):
             background_color=get_color_from_hex('#ffffff'),
             **kwargs
         )
-        self.text = "organize all file in the directory"
+        self.text = default_task
 
 class ActionButtons(BoxLayout):
     """Component for action buttons"""
-    def __init__(self, accent_color, setup_callback, start_callback, **kwargs):
+    def __init__(self, accent_color, buttons_config, **kwargs):
         super().__init__(orientation='horizontal', size_hint=(1, None), height=50, spacing=10, **kwargs)
         self.accent_color = accent_color
-        self._build_layout(setup_callback, start_callback)
+        self.buttons_config = buttons_config
+        self._build_layout()
         
-    def _build_layout(self, setup_callback, start_callback):
-        # Setup button
-        self.setup_button = Button(
-            text='Setup',
-            size_hint=(0.5, 1),
-            background_color=self.accent_color
-        )
-        self.setup_button.bind(on_press=setup_callback)
-        self.add_widget(self.setup_button)
-        
-        # Start button
-        self.start_button = Button(
-            text='Start Agent',
-            size_hint=(0.5, 1),
-            background_color=self.accent_color
-        )
-        self.start_button.bind(on_press=start_callback)
-        self.add_widget(self.start_button)
+    def _build_layout(self):
+        for button_config in self.buttons_config:
+            button = Button(
+                text=button_config['text'],
+                size_hint=(0.5, 1),
+                background_color=self.accent_color
+            )
+            button.bind(on_press=button_config['callback'])
+            self.add_widget(button)
 
 class ResultsDisplay(BoxLayout):
     """Component for results display"""
@@ -116,12 +112,14 @@ class ResultsDisplay(BoxLayout):
         ))
         
         # Results text area
+        self.scroll_view = ScrollView()
         self.results_text = TextInput(
             readonly=True,
             multiline=True,
             background_color=get_color_from_hex('#ffffff')
         )
-        self.add_widget(self.results_text)
+        self.scroll_view.add_widget(self.results_text)
+        self.add_widget(self.scroll_view)
     
     def set_text(self, text):
         self.results_text.text = text
@@ -136,32 +134,61 @@ class AgentDirUI(App):
         self.agent_creator = agent_creator
         self.selected_path = None
         self.original_dir = None
+        self.task = "organize all file in the directory"
         
     def build(self):
         # Theme setup
         self.setup_theme()
         
         # Main layout
-        layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
+        self.layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
         
-        # Add components
-        self.dir_selector = DirectorySelector(self.accent_color)
-        layout.add_widget(self.dir_selector)
+        # UI components configuration
+        self.ui_components = [
+            {
+                'type': DirectorySelector,
+                'args': {
+                    'accent_color': self.accent_color,
+                    'on_select_callback': self.on_directory_selected
+                }
+            },
+            {
+                'type': TaskInput,
+                'args': {
+                    'default_task': self.task
+                }
+            },
+            {
+                'type': ActionButtons,
+                'args': {
+                    'accent_color': self.accent_color,
+                    'buttons_config': [
+                        {'text': 'Setup', 'callback': self.setup_agent},
+                        {'text': 'Start Agent', 'callback': self.start_agent}
+                    ]
+                }
+            },
+            {
+                'type': ResultsDisplay,
+                'args': {}
+            }
+        ]
         
-        self.task_input = TaskInput()
-        layout.add_widget(self.task_input)
+        # Add components to layout
+        self.dir_selector = None
+        self.task_input = None
+        self.results_display = None
+        for component in self.ui_components:
+            ui_element = component['type'](**component['args'])
+            self.layout.add_widget(ui_element)
+            if component['type'] == DirectorySelector:
+                self.dir_selector = ui_element
+            elif component['type'] == TaskInput:
+                self.task_input = ui_element
+            elif component['type'] == ResultsDisplay:
+                self.results_display = ui_element
         
-        action_buttons = ActionButtons(
-            self.accent_color, 
-            self.setup_agent, 
-            self.start_agent
-        )
-        layout.add_widget(action_buttons)
-        
-        self.results_display = ResultsDisplay()
-        layout.add_widget(self.results_display)
-        
-        return layout
+        return self.layout
     
     # Theme methods
     def setup_theme(self):
@@ -170,6 +197,9 @@ class AgentDirUI(App):
         Window.clearcolor = self.bg_color
     
     # Agent operation methods
+    def on_directory_selected(self, path):
+        self.selected_path = path
+    
     def setup_agent(self, instance):
         selected_path = self.dir_selector.get_selected_path()
         if not selected_path:
